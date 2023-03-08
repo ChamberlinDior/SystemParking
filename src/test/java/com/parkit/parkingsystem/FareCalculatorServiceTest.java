@@ -8,10 +8,15 @@ import com.parkit.parkingsystem.service.FareCalculatorService;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.Date;
+import java.util.stream.Stream;
 
 public class FareCalculatorServiceTest {
 
@@ -27,6 +32,47 @@ public class FareCalculatorServiceTest {
     private void setUpPerTest() {
         ticket = new Ticket();
     }
+
+
+    static Stream<? extends Arguments> provideArguments() {
+        return Stream.of(
+                Arguments.of(ParkingType.CAR, 1, 0),
+                Arguments.of(ParkingType.BIKE, 1, 0),
+                Arguments.of(ParkingType.CAR, 29, 0),
+                Arguments.of(ParkingType.BIKE, 29, 0),
+                Arguments.of(ParkingType.CAR, 30, 0),
+                Arguments.of(ParkingType.BIKE, 30, 0),
+                Arguments.of(ParkingType.CAR, 31, (31 / 60) * Fare.CAR_RATE_PER_HOUR),
+                Arguments.of(ParkingType.BIKE, 31, (31 / 60) * Fare.BIKE_RATE_PER_HOUR),
+                Arguments.of(ParkingType.CAR, 45, 0,75 * Fare.CAR_RATE_PER_HOUR),
+                Arguments.of(ParkingType.BIKE, 45, 0,75 * Fare.BIKE_RATE_PER_HOUR),
+                Arguments.of(ParkingType.CAR, 60, 1 * Fare.CAR_RATE_PER_HOUR),
+                Arguments.of(ParkingType.BIKE, 60, 1 * Fare.BIKE_RATE_PER_HOUR),
+                Arguments.of(ParkingType.CAR, 120, 2 * Fare.CAR_RATE_PER_HOUR),
+                Arguments.of(ParkingType.BIKE, 120, 2 * Fare.BIKE_RATE_PER_HOUR)
+        );
+    }
+
+
+    @ParameterizedTest
+    @MethodSource("provideArguments")
+    public void calculateFare(ParkingType parkingType, long duration, double expectedPrice){
+        //GIVEN
+        Date inTime = new Date( System.currentTimeMillis() - (  duration * 60 * 1000) );
+        Date outTime = new Date();
+        ParkingSpot parkingSpot = new ParkingSpot(1, parkingType,false);
+
+        ticket.setInTime(inTime);
+        ticket.setOutTime(outTime);
+        ticket.setParkingSpot(parkingSpot);
+
+        // WHEN
+        fareCalculatorService.calculateFare(ticket);
+
+        //THEN
+        assertEquals(ticket.getPrice(),  expectedPrice);
+    }
+
 
     @Test
     public void calculateFareCar(){
@@ -53,7 +99,7 @@ public class FareCalculatorServiceTest {
         ticket.setOutTime(outTime);
         ticket.setParkingSpot(parkingSpot);
         fareCalculatorService.calculateFare(ticket);
-        assertEquals(ticket.getPrice(), Fare.BIKE_RATE_PER_HOUR);
+        assertEquals( 1 * Fare.BIKE_RATE_PER_HOUR, ticket.getPrice());
     }
 
     @Test

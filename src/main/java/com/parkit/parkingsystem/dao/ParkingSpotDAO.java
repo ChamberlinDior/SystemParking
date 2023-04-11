@@ -56,4 +56,11 @@ public class ParkingSpotDAO {
         }
     }
 
+    public ParkingSpot getParkingSpot(int id) {
+        return null;
+    }
+
+    public int getNextAvailableSpot(ParkingType car) {
+        return 0;
+    }
 }

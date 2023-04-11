@@ -34,9 +34,9 @@ public class TicketDAO {
             return ps.execute();
         }catch (Exception ex){
             logger.error("Error fetching next available slot",ex);
+            return false;
         }finally {
             dataBaseConfig.closeConnection(con);
-            return false;
         }
     }
 
@@ -85,5 +85,33 @@ public class TicketDAO {
             dataBaseConfig.closeConnection(con);
         }
         return false;
+    }
+    // La méthode isRegularClient() vérifie si le numéro d'immatriculation du véhicule fourni appartient à un client régulier
+    public boolean isRegularClient(String vehicleRegNumber) {
+        long paidTickets = 0;
+        try {
+            // Établir une connexion avec la base de données et exécuter une requête pour compter le nombre de tickets payés.
+            Connection con = dataBaseConfig.getConnection();
+            PreparedStatement ps = con.prepareStatement(DBConstants.COUNT_PAID_TICKETS);
+            ps.setString(1, vehicleRegNumber);
+            ResultSet rs = ps.executeQuery();
+            if(rs.next()){
+                // Récupérer le nombre de tickets payés et le stocker dans la variable paidTickets.
+                paidTickets = rs.getLong(1);
+            }
+            // Fermer le ResultSet, le PreparedStatement et la connexion à la base de données.
+            dataBaseConfig.closeResultSet(rs);
+            dataBaseConfig.closePreparedStatement(ps);
+            dataBaseConfig.closeConnection(con);
+        } catch (Exception ex) {
+            // En cas d'erreur, enregistrer un message d'erreur dans les logs avec des détails sur l'erreur.
+            logger.error("Error fetching paid tickets count for vehicle number " + vehicleRegNumber, ex);
+        }
+        // Vérifier si le nombre de tickets payés est supérieur à zéro et renvoyer true si c'est le cas, sinon false.
+        return paidTickets > 0;
+    }
+
+    public Ticket getTicketById(int id) {
+        return null;
     }
 }
